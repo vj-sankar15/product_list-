@@ -2396,14 +2396,7 @@
 //   final dynamic product;
 //   ProductDetailPage({required this.product});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text(product['title'])),
-//       body: Center(child: Text("Product Details Page")),
-//     );
-//   }
-// }
+
  
 
 
