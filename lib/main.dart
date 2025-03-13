@@ -2400,9 +2400,265 @@
  
 
 
+// import 'package:flutter/material.dart';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
+
+// void main() {
+//   runApp(MyApp());
+// }
+
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: ProductList(),
+//     );
+//   }
+// }
+
+// class ProductList extends StatefulWidget {
+//   @override
+//   _ProductListState createState() => _ProductListState();
+// }
+
+// class _ProductListState extends State<ProductList> {
+//   List<dynamic> products = [];
+//   List<dynamic> filteredProducts = [];
+//   TextEditingController searchController = TextEditingController();
+//   bool isLoading = false;
+//   bool isGridView = true;
+//   String selectedCategory = "All";
+//   List<String> categories = ["All", "electronics", "jewelery", "men's clothing", "women's clothing"];
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     fetchProducts();
+//   }
+
+//   Future<void> fetchProducts() async {
+//     final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
+
+//     if (response.statusCode == 200) {
+//       setState(() {
+//         products = json.decode(response.body);
+//         filteredProducts = products;
+//       });
+//     } else {
+//       throw Exception('Failed to load products');
+//     }
+//   }
+
+//   void searchProducts() {
+//     String query = searchController.text.trim();
+//     if (query.length < 3) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Enter at least 3 characters to search")),
+//       );
+//       return;
+//     }
+    
+//     setState(() {
+//       isLoading = true;
+//     });
+
+//     Future.delayed(Duration(seconds: 1), () {
+//       setState(() {
+//         filteredProducts = products
+//             .where((product) => product['title'].toLowerCase().contains(query.toLowerCase()))
+//             .toList();
+//         isLoading = false;
+//       });
+//     });
+//   }
+
+//   void filterByCategory(String category) {
+//     setState(() {
+//       selectedCategory = category;
+//       if (category == "All") {
+//         filteredProducts = products;
+//       } else {
+//         filteredProducts = products.where((product) => product['category'] == category).toList();
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text("Product List")),
+//       body: Column(
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.all(8.0),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: TextFormField(
+//                     controller: searchController,
+//                     decoration: InputDecoration(
+//                       labelText: "Search Product",
+//                       border: OutlineInputBorder(),
+//                       suffixIcon: IconButton(
+//                         icon: Icon(Icons.search),
+//                         onPressed: searchProducts,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 SizedBox(width: 10),
+//                 IconButton(
+//                   icon: Icon(Icons.filter_list),
+//                   onPressed: () {
+//                     showDialog(
+//                       context: context,
+//                       builder: (context) {
+//                         return AlertDialog(
+//                           title: Text("Filter by Category"),
+//                           content: Column(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: categories.map((category) {
+//                               return ListTile(
+//                                 title: Text(category),
+//                                 onTap: () {
+//                                   filterByCategory(category);
+//                                   Navigator.pop(context);
+//                                 },
+//                               );
+//                             }).toList(),
+//                           ),
+//                         );
+//                       },
+//                     );
+//                   },
+//                 ),
+//                 SizedBox(width: 10),
+//                 IconButton(
+//                   icon: Icon(isGridView ? Icons.list : Icons.grid_view),
+//                   onPressed: () {
+//                     setState(() {
+//                       isGridView = !isGridView;
+//                     });
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             child: isLoading
+//                 ? Center(child: CircularProgressIndicator())
+//                 : filteredProducts.isEmpty
+//                     ? Center(child: Text("No products found"))
+//                     : isGridView
+//                         ? GridView.builder(
+//                             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+//                              maxCrossAxisExtent: 200,
+//                               mainAxisExtent: 300,
+//                               crossAxisSpacing: 10,
+//                               mainAxisSpacing: 10, 
+//                                ),
+//                             itemCount: filteredProducts.length,
+//                             itemBuilder: (context, index) {
+//                               final product = filteredProducts[index];
+//                               return GestureDetector(
+//                                 onTap: () {
+//                                   print("Product Clicked: \${product['title']} - \$\${product['price']}");
+//                                   Navigator.push(
+//                                     context,
+//                                     MaterialPageRoute(
+//                                       builder: (context) => ProductDetailPage(product: product),
+//                                     ),
+//                                   );
+//                                 },
+//                                 child: Card(
+//                                   child: Column(
+//                                     children: [
+//                                       Expanded(
+//                                         child: Image.network(product['image'], fit: BoxFit.cover),
+//                                       ),
+//                                       Padding(
+//                                         padding: const EdgeInsets.all(8.0),
+//                                         child: Column(
+//                                           children: [
+//                                             Text(product['title'], maxLines: 1, overflow: TextOverflow.ellipsis),
+//                                             Text("Price: \$\${product['price']}", style: TextStyle(fontWeight: FontWeight.bold)),
+//                                           ],
+//                                         ),
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               );
+//                             },
+//                           )
+//                         : ListView.builder(
+//                             itemCount: filteredProducts.length,
+//                             itemBuilder: (context, index) {
+//                               final product = filteredProducts[index];
+//                               return ListTile(
+//                                 leading: Image.network(
+//                                   product['image'],
+//                                   width: 50,
+//                                   height: 50,
+//                                   fit: BoxFit.cover,
+//                                 ),
+//                                 title: Text(product['title']),
+//                                 subtitle: Text("Price: \$\${product['price'].toString()}"),
+//                                 onTap: () {
+//                                   print("Product Clicked: \${product['title']} - \$\${product['price']}");
+//                                   Navigator.push(
+//                                     context,
+//                                     MaterialPageRoute(
+//                                       builder: (context) => ProductDetailPage(product: product),
+//                                     ),
+//                                   );
+//                                 },
+//                               );
+//                             },
+//                           ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+// class ProductDetailPage extends StatelessWidget {
+//   final dynamic product;
+//   ProductDetailPage({required this.product});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text(product['title'])),
+//       body: Padding(
+//         padding: const EdgeInsets.all(16.0),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Image.network(product['image'], height: 200),
+//             SizedBox(height: 10),
+//             Text("Price: \$\${product['price']}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+//             SizedBox(height: 10),
+//             Text(product['description']),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+  
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 void main() {
   runApp(MyApp());
@@ -2440,7 +2696,6 @@ class _ProductListState extends State<ProductList> {
 
   Future<void> fetchProducts() async {
     final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
-
     if (response.statusCode == 200) {
       setState(() {
         products = json.decode(response.body);
@@ -2453,24 +2708,10 @@ class _ProductListState extends State<ProductList> {
 
   void searchProducts() {
     String query = searchController.text.trim();
-    if (query.length < 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Enter at least 3 characters to search")),
-      );
-      return;
-    }
-    
     setState(() {
-      isLoading = true;
-    });
-
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() {
-        filteredProducts = products
-            .where((product) => product['title'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
-        isLoading = false;
-      });
+      filteredProducts = products
+          .where((product) => product['title'].toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
@@ -2483,6 +2724,33 @@ class _ProductListState extends State<ProductList> {
         filteredProducts = products.where((product) => product['category'] == category).toList();
       }
     });
+  }
+
+  Future<void> downloadProductDetails(dynamic product) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text("Product: ${product['title']}", style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Text("Price: \$${product['price']}", style: pw.TextStyle(fontSize: 18)),
+            pw.SizedBox(height: 10),
+            pw.Text("Description: ${product['description']}"),
+          ],
+        ),
+      ),
+    );
+
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = product['title'].replaceAll(RegExp(r'[^\w\s]+'), '_');
+    final file = File("${directory.path}/${fileName}.pdf");
+    await file.writeAsBytes(await pdf.save());
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Downloaded: ${file.path}")),
+    );
   }
 
   @override
@@ -2554,41 +2822,29 @@ class _ProductListState extends State<ProductList> {
                     : isGridView
                         ? GridView.builder(
                             gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                             maxCrossAxisExtent: 200,
+                              maxCrossAxisExtent: 200,
                               mainAxisExtent: 300,
                               crossAxisSpacing: 10,
                               mainAxisSpacing: 10, 
-                               ),
+                            ),
                             itemCount: filteredProducts.length,
                             itemBuilder: (context, index) {
                               final product = filteredProducts[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  print("Product Clicked: \${product['title']} - \$\${product['price']}");
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ProductDetailPage(product: product),
+                              return Card(
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: Image.network(product['image'], fit: BoxFit.cover),
                                     ),
-                                  );
-                                },
-                                child: Card(
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: Image.network(product['image'], fit: BoxFit.cover),
+                                    ListTile(
+                                      title: Text(product['title'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      subtitle: Text("Price: \$${product['price']}"),
+                                      trailing: IconButton(
+                                        icon: Icon(Icons.download),
+                                        onPressed: () => downloadProductDetails(product),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          children: [
-                                            Text(product['title'], maxLines: 1, overflow: TextOverflow.ellipsis),
-                                            Text("Price: \$\${product['price']}", style: TextStyle(fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
@@ -2605,9 +2861,12 @@ class _ProductListState extends State<ProductList> {
                                   fit: BoxFit.cover,
                                 ),
                                 title: Text(product['title']),
-                                subtitle: Text("Price: \$\${product['price'].toString()}"),
+                                subtitle: Text("Price: \$${product['price']}"),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.download),
+                                  onPressed: () => downloadProductDetails(product),
+                                ),
                                 onTap: () {
-                                  print("Product Clicked: \${product['title']} - \$\${product['price']}");
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -2640,7 +2899,7 @@ class ProductDetailPage extends StatelessWidget {
           children: [
             Image.network(product['image'], height: 200),
             SizedBox(height: 10),
-            Text("Price: \$\${product['price']}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text("Price: \$${product['price']}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             Text(product['description']),
           ],
@@ -2649,5 +2908,3 @@ class ProductDetailPage extends StatelessWidget {
     );
   }
 }
-
- 
