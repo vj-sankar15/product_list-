@@ -2756,64 +2756,69 @@ class _ProductListState extends State<ProductList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Product List")),
+    
+      appBar: AppBar(title: Text(" Product List")),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      labelText: "Search Product",
-                      border: OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(Icons.search),
-                        onPressed: searchProducts,
-                      ),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    labelText: "Search Product",
+                    border: OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.search),
+                      onPressed: searchProducts,
                     ),
                   ),
                 ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Icon(Icons.filter_list),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Filter by Category"),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: categories.map((category) {
-                              return ListTile(
-                                title: Text(category),
-                                onTap: () {
-                                  filterByCategory(category);
-                                  Navigator.pop(context);
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Icon(isGridView ? Icons.list : Icons.grid_view),
-                  onPressed: () {
-                    setState(() {
-                      isGridView = !isGridView;
-                    });
-                  },
-                ),
-              ],
-            ),
+              ),
+              SizedBox(width:10),
+              IconButton(
+                icon: Icon(Icons.filter_list),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text("Filter by Category"),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: categories.map((category) {
+                            return ListTile(
+                              title: Text(category),
+                              onTap: () {
+                                filterByCategory(category);
+                                Navigator.pop(context);
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              SizedBox(width: 10),
+              IconButton(
+                icon: Icon(isGridView ? Icons.list : Icons.grid_view),
+                onPressed: () {
+                  setState(() {
+                    isGridView = !isGridView;
+                  });
+                },
+              ),
+            ],
           ),
+          
+          Text('Test Image'),
+          ImageIcon(
+            AssetImage('asset/homeimage.png'),),
+            SizedBox(width:10,),
+          
+          SizedBox(height: 50,),
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
@@ -2887,24 +2892,74 @@ class _ProductListState extends State<ProductList> {
 class ProductDetailPage extends StatelessWidget {
   final dynamic product;
   ProductDetailPage({required this.product});
+ 
+  
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(title: Text(product['title'])),
+  //     body: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child:const DataTableExample(),
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(product['title'])),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.network(product['image'], height: 200),
-            SizedBox(height: 10),
-            Text("Price: \$${product['price']}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text(product['description']),
+       appBar: AppBar(title: Text(product['title'])),
+       body: Padding(
+         padding: const EdgeInsets.all(16.0),
+        child:  DataTable(
+                    dataRowMaxHeight: 250,
+
+           decoration: BoxDecoration(
+            color: Colors.white, // Background color
+            borderRadius: BorderRadius.circular(10), // Rounded corners
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 5,
+                blurRadius: 5,
+            
+           )
+            ]
+        ),
+        columns: const <DataColumn>[
+        DataColumn(
+          label: Expanded(child: Text('Name', style: TextStyle(fontStyle: FontStyle.italic))),
+        ),
+        DataColumn(
+          label: Expanded(child: Text('price', style: TextStyle(fontStyle: FontStyle.italic))),
+        ),
+        DataColumn(
+          label: Expanded(child: Text('Description', style: TextStyle(fontStyle: FontStyle.italic))),
+        ),
+        DataColumn(
+          label:Expanded(child: Text('Image', style: TextStyle(fontStyle: FontStyle.italic))),
+        ),
+      ],
+       rows: <DataRow>[
+        DataRow(
+          cells: <DataCell>[
+            DataCell(Text(product['title'],style:TextStyle(fontSize: 15))),
+            DataCell(Text("Price: \$${product['price']}", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold))),
+            DataCell(Text(product['description'])),
+            DataCell(SizedBox(width:100,height: 200,child: Image.network(width: 200,product['image'], )),)
           ],
         ),
-      ),
+         ]
+    )
+    )
     );
+
+
+        //  Column(
+        //   crossAxisAlignment: CrossAxisAlignment.start,
+        //   children: [
+        //     Image.network(product['image'], height: 200),
+        //     Text("Price: \$${product['price']}", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        //     SizedBox(height: 10),
+        //     SizedBox(height: 10),
+        //     Text(product['description']),
+        //   ],
   }
 }
