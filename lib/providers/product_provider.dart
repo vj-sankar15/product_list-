@@ -1,6 +1,10 @@
+import 'dart:io';
+import "package:excel/excel.dart";
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 
 
 class ProductProvider extends ChangeNotifier {
@@ -24,6 +28,8 @@ class ProductProvider extends ChangeNotifier {
   bool get isGridView => _isGridView;
   String get selectedCategory => _selectedCategory;
   List<String> get categories => _categories;
+
+  
 
 
   /// Fetch Products from API
@@ -86,7 +92,7 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
       notifyListeners(); // Notify UI
 
       // Fetch latest products from API to ensure consistency
-      await fetchProducts();
+      // await fetchProducts();
     } else {
       throw Exception("Failed to add product");
     }
@@ -94,8 +100,6 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
     print("Error adding product: $e");
   }
 }
-
-
 
   // Future<void> addProduct(Map<String, dynamic> newProduct) async {
     
@@ -151,4 +155,51 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
     _isGridView = !_isGridView;
     notifyListeners();
   }
+  generateExcel(List<Map<String, dynamic>> products) async {
+  var excel = Excel.createExcel();
+  var sheet = excel['Products'];
+
+  // Ensure there's at least one product to determine column headers
+  if (products.isEmpty) {
+    print("No products available to generate an Excel file.");
+    return;
+  }
+
+  
+  
+  
+ sheet.appendRow([
+    TextCellValue("ID"),
+    TextCellValue("Title"),
+    TextCellValue("Price"),
+    TextCellValue("Category"),
+  ]);
+
+  // // Add Product Details
+  for (var product in products) {
+    sheet.appendRow([
+      TextCellValue(product['id'].toString()),
+      TextCellValue(product['title']),
+      TextCellValue(product['price'].toString()),
+      TextCellValue(product['category']),
+    ]);
+  }
+    
+
+  // Get Directory for saving the file
+  final directory = await getApplicationDocumentsDirectory(); // For Android & iOS
+  String filePath = "${directory.path}/product1.xlsx";
+
+  // Save Excel file
+  File(filePath)
+    ..createSync(recursive: true)
+    ..writeAsBytesSync(excel.encode()!);
+
+  print("Excel file saved at: $filePath");
+}
+
+
+
+
+  // void filterByCategory(String category) {}
 }

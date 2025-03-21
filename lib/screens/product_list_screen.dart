@@ -17,6 +17,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final TextEditingController priceController = TextEditingController();
 
   final TextEditingController imageUrlController = TextEditingController();
+  
 
   @override
   void initState() {
@@ -93,6 +94,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           );
                         },
                       ),
+                      SizedBox(width: 10,),
+                      IconButton(
+                        icon: Icon(Icons.download), // Download button
+                         onPressed: () => provider.generateExcel(provider.products),
+                       ),
                     ],
                   ),
                 ),
@@ -157,32 +163,63 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             },
                          
                           )
-                          : ListView.builder(
-                            itemCount: provider.products.length,
-                            itemBuilder: (context, index) {
-                              final product = provider.products[index];
-                              return ListTile(
-                                leading: Image.network(
-                                  product['image'],
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                ),
-                                title: Text(product['title']),
-                                subtitle: Text("Price: \$${product['price']}"),
-                                onTap: () {
-                                  print(
-                                    "Product Clicked: \${product['title']} - \$\${product['price']}",
-                                  );
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/details',
-                                    arguments: product['id'].toString(),
-                                  );
-                                },
-                              );
-                            },
-                          ),
+                         :ListView.builder(
+  itemCount: provider.products.length,
+  itemBuilder: (context, index) {
+    final product = provider.products[index];
+
+    return ListTile(
+      leading: Image.network(
+        product['image'],
+        width: 50,
+        height: 50,
+        fit: BoxFit.cover,
+      ),
+      title: Text(product['title']),
+      subtitle: Text("Price: \$${product['price']}"),
+      // trailing: IconButton(
+      //   icon: Icon(Icons.download), // Download button
+      //   onPressed: () => provider.generateExcel(product),
+      // ),
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          '/details',
+          arguments: product['id'].toString(),
+        );
+      },
+    );
+  },
+),
+
+                          // : ListView.builder(
+                          //   itemCount: provider.products.length,
+                          //   itemBuilder: (context, index) {
+                          //     final product = provider.products[index];
+                          //     return ListTile(
+                          //       leading: Image.network(
+                          //         product['image'],
+                          //         width: 50,
+                          //         height: 50,
+                          //         fit: BoxFit.cover,
+                          //       ),
+                          //       title: Text(product['title']),
+                          //       subtitle: Text("Price: \$${product['price']}"),
+                          //       onTap: () {
+                          //         print(
+                          //           "Product Clicked: \${product['title']} - \$\${product['price']}",
+                          //         );
+                          //         Navigator.pushNamed(
+                          //           context,
+                          //           '/details',
+                          //           arguments: product['id'].toString(),
+                          //         );
+                          //       },
+                          //     );
+                          //   },
+                          // ),
+
+                          
                 ),
               
                 // SizedBox(width: 100,height: 50,
