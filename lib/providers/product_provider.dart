@@ -34,7 +34,7 @@ class ProductProvider extends ChangeNotifier {
 
   /// Fetch Products from API
   Future<void> fetchProducts() async {
-    notifyListeners(); // Notify UI to show loading
+    notifyListeners(); 
 
     try {
       final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
@@ -47,29 +47,9 @@ class ProductProvider extends ChangeNotifier {
     } catch (e) {
       print("Error fetching products: $e");
     } finally {
-      notifyListeners(); // Notify UI to update after fetching data
+      notifyListeners(); 
     }
   }
-
-
-  // Future<void> fetchProducts() async {
-  //    = tru_isLoadinge;
-  //   Future.delayed(Duration.zero, () {
-  //     notifyListeners();
-  //   });
-  //   try {
-  //     final response = await http.get(
-  //       Uri.parse('https://fakestoreapi.com/products'),
-  //     );
-  //     if (response.statusCode == 200) {
-  //       _products = List<Map<String, dynamic>>.from(jsonDecode(response.body));
-  //     }
-  //   } catch (e) {
-  //     print("Error fetching products: $e");
-  //   }
-  //   _isLoading = false;
-  //   notifyListeners();
-  // }
 
 Future<void> addProduct(Map<String, dynamic> newProduct) async {
      notifyListeners();
@@ -101,29 +81,6 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
   }
 }
 
-  // Future<void> addProduct(Map<String, dynamic> newProduct) async {
-    
-  //   _isLoading = true;
-  //   notifyListeners();
-
-  //   try {
-  //     final response = await http.post(
-  //       Uri.parse('https://fakestoreapi.com/products'),
-  //       headers: {"Content-Type": "application/json"},
-  //       body: jsonEncode(newProduct),
-  //     );
-
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       final createdProduct = jsonDecode(response.body);
-  //       _products.add(createdProduct);
-  //     }
-  //   } catch (e) {
-  //     print("Error adding product: $e");
-  //   }
-
-  //   _isLoading = false;
-  //   notifyListeners();
-  // }
 
   List<Map<String, dynamic>> searchProducts(String query) {
     if (query.length < 3) return [];
