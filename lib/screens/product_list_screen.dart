@@ -17,7 +17,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
   final TextEditingController priceController = TextEditingController();
 
   final TextEditingController imageUrlController = TextEditingController();
-  
 
   @override
   void initState() {
@@ -27,15 +26,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
-        var provider =  context.read<ProductProvider>();
+    var provider = context.read<ProductProvider>();
 
     return Scaffold(
-      floatingActionButton:  FloatingActionButton.extended(
-                  onPressed: ()  => _showAddProductDialog(context, provider),
-                  label: const Text('AddProduct'),
-                  icon: const Icon(Icons.add),
-                ),
-      appBar: AppBar(title: Text("Product List"),),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddProductDialog(context, provider),
+        label: const Text('AddProduct'),
+        icon: const Icon(Icons.add),
+      ),
+      appBar: AppBar(title: Text("Product List")),
       body: Consumer<ProductProvider>(
         builder:
             (context, provider, child) => Column(
@@ -94,11 +93,23 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           );
                         },
                       ),
-                      SizedBox(width: 10,),
+                      SizedBox(width: 10),
                       IconButton(
                         icon: Icon(Icons.download), // Download button
-                         onPressed: () => provider.generateExcel(provider.products),
-                       ),
+                        onPressed: () async {
+                       final provider = Provider.of<ProductProvider>(context, listen: false);
+
+                        if (provider.products.isEmpty) {
+                         print("⚠️ No products found! Fetching data...");
+                        await provider.fetchProducts();
+                      }
+
+                        await provider.generatePDF(provider.products); // ✅ Remove the argument
+                       print("✅ Generate PDF for products");
+                     },
+
+
+                      ),
                     ],
                   ),
                 ),
@@ -148,7 +159,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             Text(
-                                              "Price: \$${product['price']}".toString(),
+                                              "Price: \$${product['price']}"
+                                                  .toString(),
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -161,39 +173,44 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 ),
                               );
                             },
-                         
                           )
-                         :ListView.builder(
-  itemCount: provider.products.length,
-  itemBuilder: (context, index) {
-    final product = provider.products[index];
+                          : ListView.builder(
+                            itemCount: provider.products.length,
+                            itemBuilder: (context, index) {
+                              final product = provider.products[index];
 
-    return ListTile(
-      leading: Image.network(
-        product['image'],
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-      ),
-      title: Text(product['title']),
-      subtitle: Text("Price: \$${product['price']}"),
-     
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/details',
-          arguments: product['id'].toString(),
-        );
-      },
-    );
-  },
-),
+                              return ListTile(
+                                leading: Image.network(
+                                  product['image'],
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                ),
+                                title: Text(product['title']),
+                                subtitle: Text("Price: \$${product['price']}"),
+
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/details',
+                                    arguments: product['id'].toString(),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                 ),
+
+                // SizedBox(width: 100,height: 50,
+                //     child: FloatingActionButton.extended(
+                //     onPressed: () => _showAddProductDialog(context, provider),
+                //    label: const Text('Add Products'),
+                //    ),
+                // ),
               ],
             ),
       ),
     );
-    
   }
 
   void _showAddProductDialog(BuildContext context, ProductProvider provider) {

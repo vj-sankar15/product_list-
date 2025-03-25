@@ -1,11 +1,10 @@
 import 'dart:io';
-import "package:excel/excel.dart";
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
-
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
 
 class ProductProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _products = [];
@@ -19,7 +18,7 @@ class ProductProvider extends ChangeNotifier {
     "jewelery",
     "men's clothing",
     "women's clothing",
-    "photo Frames"
+    "photo Frames",
   ];
 
   List<Map<String, dynamic>> get products => _products;
@@ -29,15 +28,14 @@ class ProductProvider extends ChangeNotifier {
   String get selectedCategory => _selectedCategory;
   List<String> get categories => _categories;
 
-  
-
-
   /// Fetch Products from API
   Future<void> fetchProducts() async {
-    notifyListeners(); 
+    notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse('https://fakestoreapi.com/products'));
+      final response = await http.get(
+        Uri.parse('https://fakestoreapi.com/products'),
+      );
 
       if (response.statusCode == 200) {
         _products = List<Map<String, dynamic>>.from(json.decode(response.body));
@@ -47,40 +45,40 @@ class ProductProvider extends ChangeNotifier {
     } catch (e) {
       print("Error fetching products: $e");
     } finally {
-      notifyListeners(); 
+      notifyListeners();
     }
   }
 
-Future<void> addProduct(Map<String, dynamic> newProduct) async {
-     notifyListeners();
-  try {
-    final response = await http.post(
-      Uri.parse('https://fakestoreapi.com/products'),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode(newProduct),
-    );
+  Future<void> addProduct(Map<String, dynamic> newProduct) async {
+    notifyListeners();
+    try {
+      final response = await http.post(
+        Uri.parse('https://fakestoreapi.com/products'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode(newProduct),
+      );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final Map<String, dynamic> createdProduct = json.decode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> createdProduct = json.decode(response.body);
 
-      // Ensure the newly created product has an ID
-      if (!createdProduct.containsKey("id")) {
-        createdProduct["id"] = DateTime.now().millisecondsSinceEpoch.toString();
+        // Ensure the newly created product has an ID
+        if (!createdProduct.containsKey("id")) {
+          createdProduct["id"] =
+              DateTime.now().millisecondsSinceEpoch.toString();
+        }
+
+        _products.add(createdProduct); // Add product with correct structure
+        notifyListeners(); // Notify UI
+
+        // Fetch latest products from API to ensure consistency
+        // await fetchProducts();
+      } else {
+        throw Exception("Failed to add product");
       }
-
-      _products.add(createdProduct); // Add product with correct structure
-      notifyListeners(); // Notify UI
-
-      // Fetch latest products from API to ensure consistency
-      // await fetchProducts();
-    } else {
-      throw Exception("Failed to add product");
+    } catch (e) {
+      print("Error adding product: $e");
     }
-  } catch (e) {
-    print("Error adding product: $e");
   }
-}
-
 
   List<Map<String, dynamic>> searchProducts(String query) {
     if (query.length < 3) return [];
@@ -93,13 +91,13 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
         .toList();
   }
 
-  void filterByCategory(String category) async{
+  void filterByCategory(String category) async {
     _selectedCategory = category;
 
     if (category == "All") {
       fetchProducts(); // Reload all products if "All" is selected
     } else {
-    await  fetchProducts(); // Reload all products if "All" is selected
+      await fetchProducts(); // Reload all products if "All" is selected
 
       _products =
           _products
@@ -112,51 +110,152 @@ Future<void> addProduct(Map<String, dynamic> newProduct) async {
     _isGridView = !_isGridView;
     notifyListeners();
   }
-  generateExcel(List<Map<String, dynamic>> products) async {
-  var excel = Excel.createExcel();
-  var sheet = excel['Products'];
 
-  // Ensure there's at least one product to determine column headers
+
+Future<void> generatePDF(List<Map<String, dynamic>> products) async {
   if (products.isEmpty) {
-    print("No products available to generate an Excel file.");
+    print("⚠️ No products available!");
     return;
   }
 
-  
-  
-  
- sheet.appendRow([
-    TextCellValue("ID"),
-    TextCellValue("Title"),
-    TextCellValue("Price"),
-    TextCellValue("Category"),
-  ]);
+  final pdf = pw.Document();
 
-  // // Add Product Details
-  for (var product in products) {
-    sheet.appendRow([
-      TextCellValue(product['id'].toString()),
-      TextCellValue(product['title']),
-      TextCellValue(product['price'].toString()),
-      TextCellValue(product['category']),
-    ]);
-  }
-    
+  pdf.addPage(
+    pw.Page(
+      build: (pw.Context context) {
+        return  pw.Container(
+          padding: pw.EdgeInsets.all(5),
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                     child:pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Title
+            pw.Text(
+              "Product List",
+              style: pw.TextStyle(
+                fontSize: 24,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+            pw.SizedBox(height: 10),
+
+            // Header Row
+            pw.Container(
+              padding: pw.EdgeInsets.symmetric(vertical: 8),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(bottom: pw.BorderSide(width: 1)),
+              ),
+              child: pw.Row(
+                children: [
+                  _headerCell("ID", 40),
+                  _headerCell("Title", 180),
+                  _headerCell("Price", 80),
+                  _headerCell("Category", 100),
+                ],
+              ),
+            ),
+
+            // Product Rows
+            for (var product in products)
+              pw.Container(
+                padding: pw.EdgeInsets.symmetric(vertical: 5),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border(bottom: pw.BorderSide(width:0.5)),
+                ),
+                child: pw.Row(
+                  children: [
+                    _dataCell(product['id']?.toString() ?? "N/A", 40),
+                    _dataCell(product['title'] ?? "N/A", 180),
+                    _dataCell("\$${product['price']?.toString() ?? "0.00"}", 80),
+                    _dataCell(product['category'] ?? "Unknown", 100),
+                  ],
+                ),
+              ),
+          ],
+        )
+        );
+      },
+    ),
+  );
 
   // Get Directory for saving the file
-  final directory = await getApplicationDocumentsDirectory(); // For Android & iOS
-  String filePath = "${directory.path}/product1.xlsx";
+  final directory = await getApplicationDocumentsDirectory();
+  String filePath = "${directory.path}/products.pdf";
 
-  // Save Excel file
-  File(filePath)
-    ..createSync(recursive: true)
-    ..writeAsBytesSync(excel.encode()!);
+  // Save PDF file
+  final file = File(filePath);
+  await file.writeAsBytes(await pdf.save());
 
-  print("Excel file saved at: $filePath");
+  print("✅ PDF saved at: $filePath");
 }
 
-
-
-
-  // void filterByCategory(String category) {}
+// Header Cell
+pw.Widget _headerCell(String text, double width) {
+  return pw.Container(
+    width: width,
+    alignment: pw.Alignment.centerLeft,
+    padding: pw.EdgeInsets.symmetric(horizontal: 8),
+    child: pw.Text(
+      text,
+      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+    ),
+  );
 }
+
+// Data Cell
+pw.Widget _dataCell(String text, double width) {
+  return pw.Container(
+    width: width,
+    alignment: pw.Alignment.centerLeft,
+    padding: pw.EdgeInsets.symmetric(horizontal: 8),
+    child: pw.Text(text),
+  );
+}
+
+}
+//   generateExcel(List<Map<String, dynamic>> products) async {
+
+//   var excel = Excel.createExcel();
+  
+
+//   var sheet = excel['Products'];
+
+//   // Ensure there's at least one product to determine column headers
+//   if (products.isEmpty) {
+//     return print('Data not added');
+//   }
+//  sheet.appendRow([
+//     TextCellValue("ID"),
+//     TextCellValue("Title"),
+//     TextCellValue("Price"),
+//     TextCellValue("Category"),
+//   ]);
+
+//   // // Add Product Details
+//   for (var product in products) {
+//     sheet.appendRow([
+//       TextCellValue(product['id'].toString()),
+//       TextCellValue(product['title']),
+//       TextCellValue(product['price'].toString()),
+//       TextCellValue(product['category']),
+//     ]);
+//   }
+//       String defaultSheet = excel.sheets.keys.first;
+//   excel.delete(defaultSheet);
+
+//   // Get Directory for saving the file
+//   final directory = await getApplicationDocumentsDirectory();
+//   String filePath = "${directory.path}/product78.xlsx"; // For Android & iOS
+
+//   // Save Excel file
+//   File(filePath)
+//     ..createSync(recursive: true)
+//     ..writeAsBytesSync(excel.encode()!);
+
+//   print("Excel file saved at: $filePath");
+// }
+
+
+
+
+  // void filterByCategory(String category) {} 
