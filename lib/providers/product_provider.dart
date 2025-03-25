@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 
+
 class ProductProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
@@ -121,9 +122,12 @@ Future<void> generatePDF(List<Map<String, dynamic>> products) async {
   final pdf = pw.Document();
 
   pdf.addPage(
-    pw.Page(
+    pw.MultiPage(
+        pageFormat: PdfPageFormat.a4, // ✅ Use PdfPageFormat instead of pw.PageFormat
+      margin: pw.EdgeInsets.all(20),
       build: (pw.Context context) {
-        return  pw.Container(
+        return[
+         pw.Container(
           padding: pw.EdgeInsets.all(5),
                       decoration: pw.BoxDecoration(border: pw.Border.all()),
                      child:pw.Column(
@@ -141,39 +145,52 @@ Future<void> generatePDF(List<Map<String, dynamic>> products) async {
 
             // Header Row
             pw.Container(
-              padding: pw.EdgeInsets.symmetric(vertical: 8),
+              padding: pw.EdgeInsets.symmetric(horizontal: 8),
               decoration: pw.BoxDecoration(
                 border: pw.Border(bottom: pw.BorderSide(width: 1)),
               ),
               child: pw.Row(
                 children: [
-                  _headerCell("ID", 40),
-                  _headerCell("Title", 180),
+                    _headerCell("ID", 40),
+                  _headerCell("Title", 300),
                   _headerCell("Price", 80),
-                  _headerCell("Category", 100),
+                  _headerCell("Category", 120),
                 ],
               ),
             ),
 
             // Product Rows
-            for (var product in products)
-              pw.Container(
-                padding: pw.EdgeInsets.symmetric(vertical: 5),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border(bottom: pw.BorderSide(width:0.5)),
-                ),
+               // Product Rows (Handled for Multipage)
+          ...products.map((product) =>  pw.Container(
+                
+                
                 child: pw.Row(
                   children: [
-                    _dataCell(product['id']?.toString() ?? "N/A", 40),
-                    _dataCell(product['title'] ?? "N/A", 180),
-                    _dataCell("\$${product['price']?.toString() ?? "0.00"}", 80),
-                    _dataCell(product['category'] ?? "Unknown", 100),
+                    pw.Container(
+                      height: 50,
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child: _dataCell(product['id']?.toString() ?? "N/A", 40),),
+                  pw.Container(
+                    height: 50,
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child:  _dataCell(product['title'] ?? "N/A", 300),),
+                  pw.Container(
+                    height: 50,
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child:   _dataCell("\$${product['price']?.toString() ?? "0.00"}", 80),),
+                  pw.Container(
+                    height: 50,
+                      decoration: pw.BoxDecoration(border: pw.Border.all()),
+                  child:  _dataCell(product['category'] ?? "Unknown", 120),),
                   ],
                 ),
               ),
+          )
           ],
         )
-        );
+         )    
+        ];
+    
       },
     ),
   );
@@ -211,6 +228,7 @@ pw.Widget _dataCell(String text, double width) {
     child: pw.Text(text),
   );
 }
+
 
 }
 //   generateExcel(List<Map<String, dynamic>> products) async {
