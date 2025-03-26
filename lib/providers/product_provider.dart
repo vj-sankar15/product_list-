@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
-
+import 'dart:html' as html; // Add this import for web
+import 'dart:typed_data';
 
 class ProductProvider extends ChangeNotifier {
   List<Map<String, dynamic>> _products = [];
@@ -113,124 +114,129 @@ class ProductProvider extends ChangeNotifier {
   }
 
 
-Future<void> generatePDF(List<Map<String, dynamic>> products) async {
-  if (products.isEmpty) {
-    print("⚠️ No products available!");
-    return;
+  Future<void> generatePDF(List<Map<String, dynamic>> products) async {
+    if (products.isEmpty) {
+      print("⚠️ No products available!");
+      return;
+    }
+
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.all(20),
+        build: (pw.Context context) {
+          return [
+            pw.Container(
+              padding: pw.EdgeInsets.all(5),
+              decoration: pw.BoxDecoration(border: pw.Border.all()),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  pw.Text(
+                    "Product List",
+                    style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 10),
+
+                  // Header Row
+                  pw.Container(
+                    padding: pw.EdgeInsets.symmetric(horizontal: 8),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border(bottom: pw.BorderSide(width: 1)),),
+                    child: pw.Row(
+                      children: [
+                        _headerCell("ID", 40),
+                        _headerCell("Title", 300),
+                        _headerCell("Price", 80),
+                        _headerCell("Category", 120),
+                      ],
+                    ),
+                  ),
+                  
+
+                  // Product Rows
+                  ...products.map((product) => pw.Container(
+                    child: pw.Row(
+                      children: [
+                        pw.Container(
+                          height: 50,
+                          decoration: pw.BoxDecoration(border: pw.Border.all()),
+                          child: _dataCell(product['id']?.toString() ?? "N/A", 40),
+                        ),
+                        pw.Container(
+                          height: 50,
+                          decoration: pw.BoxDecoration(border: pw.Border.all()),
+                          child: _dataCell(product['title'] ?? "N/A", 300),
+                        ),
+                        pw.Container(
+                          height: 50,
+                          decoration: pw.BoxDecoration(border: pw.Border.all()),
+                          child: _dataCell("\$${product['price']?.toString() ?? "0.00"}", 80),
+                        ),
+                        pw.Container(
+                          height: 50,
+                          decoration: pw.BoxDecoration(border: pw.Border.all()),
+                          child: _dataCell(product['category'] ?? "Unknown", 120),
+                        ),
+                      ],
+                    ),
+                  ))
+                ],
+              )
+            )    
+          ];
+        },
+      ),
+    );
+
+    // Get the PDF bytes
+    final bytes = await pdf.save();
+
+    // For web download
+    _downloadPdfWeb(bytes, 'products.pdf');
   }
 
-  final pdf = pw.Document();
+  // Web-specific download function
+  void _downloadPdfWeb(Uint8List bytes, String fileName) {
+    final blob = html.Blob([bytes], 'application/pdf');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', fileName)
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
 
-  pdf.addPage(
-    pw.MultiPage(
-        pageFormat: PdfPageFormat.a4, // ✅ Use PdfPageFormat instead of pw.PageFormat
-      margin: pw.EdgeInsets.all(20),
-      build: (pw.Context context) {
-        return[
-         pw.Container(
-          padding: pw.EdgeInsets.all(5),
-                      decoration: pw.BoxDecoration(border: pw.Border.all()),
-                     child:pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Title
-            pw.Text(
-              "Product List",
-              style: pw.TextStyle(
-                fontSize: 24,
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-            pw.SizedBox(height: 10),
+  // Keep your existing helper methods
+  pw.Widget _headerCell(String text, double width) {
+    return pw.Container(
+      width: width,
+      alignment: pw.Alignment.centerLeft,
+      padding: pw.EdgeInsets.symmetric(horizontal: 8),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+      ),
+    );
+  }
 
-            // Header Row
-            pw.Container(
-              padding: pw.EdgeInsets.symmetric(horizontal: 8),
-              decoration: pw.BoxDecoration(
-                border: pw.Border(bottom: pw.BorderSide(width: 1)),
-              ),
-              child: pw.Row(
-                children: [
-                    _headerCell("ID", 40),
-                  _headerCell("Title", 300),
-                  _headerCell("Price", 80),
-                  _headerCell("Category", 120),
-                ],
-              ),
-            ),
-
-            // Product Rows
-               // Product Rows (Handled for Multipage)
-          ...products.map((product) =>  pw.Container(
-                
-                
-                child: pw.Row(
-                  children: [
-                    pw.Container(
-                      height: 50,
-                      decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  child: _dataCell(product['id']?.toString() ?? "N/A", 40),),
-                  pw.Container(
-                    height: 50,
-                      decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  child:  _dataCell(product['title'] ?? "N/A", 300),),
-                  pw.Container(
-                    height: 50,
-                      decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  child:   _dataCell("\$${product['price']?.toString() ?? "0.00"}", 80),),
-                  pw.Container(
-                    height: 50,
-                      decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  child:  _dataCell(product['category'] ?? "Unknown", 120),),
-                  ],
-                ),
-              ),
-          )
-          ],
-        )
-         )    
-        ];
-    
-      },
-    ),
-  );
-
-  // Get Directory for saving the file
-  final directory = await getApplicationDocumentsDirectory();
-  String filePath = "${directory.path}/products.pdf";
-
-  // Save PDF file
-  final file = File(filePath);
-  await file.writeAsBytes(await pdf.save());
-
-  print("✅ PDF saved at: $filePath");
-}
-
-// Header Cell
-pw.Widget _headerCell(String text, double width) {
-  return pw.Container(
-    width: width,
-    alignment: pw.Alignment.centerLeft,
-    padding: pw.EdgeInsets.symmetric(horizontal: 8),
-    child: pw.Text(
-      text,
-      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-    ),
-  );
-}
-
-// Data Cell
-pw.Widget _dataCell(String text, double width) {
-  return pw.Container(
-    width: width,
-    alignment: pw.Alignment.centerLeft,
-    padding: pw.EdgeInsets.symmetric(horizontal: 8),
-    child: pw.Text(text),
-  );
+  pw.Widget _dataCell(String text, double width) {
+    return pw.Container(
+      width: width,
+      alignment: pw.Alignment.centerLeft,
+      padding: pw.EdgeInsets.symmetric(horizontal: 8),
+      child: pw.Text(text),
+    );
+  }
 }
 
 
-}
+
 //   generateExcel(List<Map<String, dynamic>> products) async {
 
 //   var excel = Excel.createExcel();
